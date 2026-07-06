@@ -1,0 +1,33 @@
+trigger:
+  branches:
+    include:
+      - '*'
+pr:
+  branches:
+    include:
+      - '*'
+
+stages:
+- stage: Build
+  jobs:
+  - job: Test
+    steps:
+    - checkout: self
+    - script: |
+        echo "SourceCommitId: $(System.PullRequest.SourceCommitId)"
+        echo "SourceBranch: $(Build.SourceBranch)"
+
+- stage: Deploy
+  dependsOn: Build
+  variables:
+  - group: prod-secrets
+  jobs:
+  - deployment: DeployJob
+    environment: prod
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+          - script: |
+              echo "using canary: $(mySecret)"
